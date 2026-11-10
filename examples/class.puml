@@ -1,6 +1,7 @@
 @startuml
 !theme sys-flat from ../themes
 title Order domain
+set separator none
 
 package "org.acme.shop" {
   abstract class PanacheEntity {

@@ -1,0 +1,10 @@
+'' C4 element styles for sys-flat and sys-flat-dark. The C4 library sets its own colours,
+'' so include this file after the !theme line and after the C4 include.
+UpdateElementStyle("person", $bgColor=$SYS_ACCENT_SOFT, $fontColor=$SYS_TEXT, $borderColor=$SYS_ACCENT)
+UpdateElementStyle("system", $bgColor=$SYS_CARD_2, $fontColor=$SYS_TEXT, $borderColor=$SYS_ACCENT)
+UpdateElementStyle("container", $bgColor=$SYS_CARD_2, $fontColor=$SYS_TEXT, $borderColor=$SYS_ACCENT)
+UpdateElementStyle("component", $bgColor=$SYS_CARD, $fontColor=$SYS_TEXT, $borderColor=$SYS_BORDER)
+UpdateElementStyle("external_system", $bgColor=$SYS_FLOOR, $fontColor=$SYS_TEXT_MUTED, $borderColor=$SYS_BORDER)
+UpdateBoundaryStyle($fontColor=$SYS_TEXT_MUTED, $borderColor=$SYS_BORDER_STRONG)
+UpdateSystemBoundaryStyle($fontColor=$SYS_TEXT_MUTED, $borderColor=$SYS_BORDER_STRONG)
+UpdateRelStyle($SYS_TEXT_MUTED, $SYS_LINE)

@@ -1,0 +1,28 @@
+@startuml
+!theme sys-flat from ../themes
+title Order request timing
+
+robust "Web app" as Web
+concise "OrderService" as Svc
+robust "Database" as DB
+
+@0
+Web is Idle
+Svc is Idle
+DB is Idle
+
+@100
+Web is Handling
+Svc is Creating
+
+@180
+DB is Writing
+
+@260
+DB is Idle
+Svc is Publishing
+
+@320
+Svc is Idle
+Web is Idle
+@enduml

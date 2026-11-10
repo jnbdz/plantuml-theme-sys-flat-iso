@@ -1,0 +1,28 @@
+@startuml
+!theme sys-flat from ../themes
+title Shop schema
+
+entity "customer" as customer {
+  * id : bigint <<PK>>
+  --
+  * name : varchar(80)
+  * email : varchar(120)
+}
+entity "orders" as orders {
+  * id : bigint <<PK>>
+  --
+  * customer_id : bigint <<FK>>
+  * status : varchar(16)
+  * total : numeric(10,2)
+}
+entity "order_line" as line {
+  * id : bigint <<PK>>
+  --
+  * order_id : bigint <<FK>>
+  * quantity : int
+  * price : numeric(10,2)
+}
+
+customer ||--o{ orders
+orders ||--|{ line
+@enduml

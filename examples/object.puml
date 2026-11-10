@@ -1,0 +1,26 @@
+@startuml
+!theme sys-flat from ../themes
+title Order #42 at run time
+
+object "order : Order" as order {
+  id = 42
+  status = PAID
+  total = 59.90
+}
+object "alice : Customer" as alice {
+  name = "Alice"
+  email = "alice@example.com"
+}
+object "line1 : OrderLine" as line1 {
+  quantity = 2
+  price = 19.95
+}
+object "line2 : OrderLine" as line2 {
+  quantity = 1
+  price = 20.00
+}
+
+order --> alice : customer
+order *-- line1
+order *-- line2
+@enduml

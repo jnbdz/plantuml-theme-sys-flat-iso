@@ -1,0 +1,21 @@
+@startuml
+!theme sys-flat from ../themes
+title Production deployment
+
+node "Kubernetes cluster" as K8s {
+  node "shop pod x3" as Pod {
+    artifact "shop-runner.jar" as Jar
+  }
+  node "kafka" as KafkaNode {
+    queue "orders" as Topic
+  }
+}
+database "PostgreSQL\n(managed)" as DB
+cloud "Payment provider" as Pay
+node "Ingress" as Ingress
+
+Ingress --> Pod : HTTPS
+Jar --> DB : JDBC
+Jar --> Topic
+Jar --> Pay : HTTPS
+@enduml

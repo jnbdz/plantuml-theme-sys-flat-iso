@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Container>
+!theme sys-flat from ../themes
+!include ../themes/c4-sys-flat.puml
+title shop - containers
+
+Person(user, "User", "Calls the application over the network")
+System_Boundary(system, "shop") {
+    Container(app, "shop", "Quarkus", "2 messaging, 2 entity, 1 scheduled, 1 repository, 1 rest-endpoint, 2 bean, 1 rest-client")
+    ContainerDb(db, "PostgreSQL", "PostgreSQL")
+    ContainerQueue(broker, "Kafka", "Kafka")
+}
+System_Ext(payments, "localhost:8081", "HTTP")
+
+Rel(user, app, "calls")
+Rel(app, db, "stored-in")
+Rel(app, broker, "publishes orders")
+Rel(broker, app, "delivers shipments")
+Rel(app, payments, "calls HTTP")
+@enduml

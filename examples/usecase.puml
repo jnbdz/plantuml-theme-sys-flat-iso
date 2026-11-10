@@ -1,0 +1,24 @@
+@startuml
+!theme sys-flat from ../themes
+title Shop use cases
+left to right direction
+
+actor Customer
+actor "Shop admin" as Admin
+actor "Payment provider" as Pay <<external>>
+
+rectangle Shop {
+  usecase "Browse catalog" as UC1
+  usecase "Place order" as UC2
+  usecase "Pay order" as UC3
+  usecase "Manage products" as UC4
+  usecase "Ship order" as UC5
+}
+
+Customer --> UC1
+Customer --> UC2
+UC2 ..> UC3 : <<include>>
+UC3 --> Pay
+Admin --> UC4
+Admin --> UC5
+@enduml

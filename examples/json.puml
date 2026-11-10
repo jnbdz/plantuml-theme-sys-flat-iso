@@ -1,0 +1,16 @@
+@startuml
+!theme sys-flat from ../themes
+title Order as JSON
+@startjson
+{
+  "id": 42,
+  "status": "PAID",
+  "customer": {"name": "Alice", "email": "alice@example.com"},
+  "lines": [
+    {"sku": "A-1", "quantity": 2, "price": 19.95},
+    {"sku": "B-7", "quantity": 1, "price": 20.00}
+  ],
+  "total": 59.90
+}
+@endjson
+@enduml

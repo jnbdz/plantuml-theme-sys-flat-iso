@@ -1,0 +1,17 @@
+@startuml
+!theme sys-flat from ../themes
+title Order life cycle
+
+[*] --> New : place
+New --> Paid : payment ok
+New --> Cancelled : payment failed
+Paid --> Shipped : shipment sent
+Shipped --> Delivered : signed
+Delivered --> [*]
+Cancelled --> [*]
+
+state Paid {
+  [*] --> Packing
+  Packing --> ReadyToShip
+}
+@enduml

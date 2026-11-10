@@ -1,0 +1,38 @@
+@startuml
+!theme sys-flat from ../themes
+title Order domain
+
+package "org.acme.shop" {
+  abstract class PanacheEntity {
+    +id : Long
+  }
+  class Order {
+    +status : OrderStatus
+    +total : BigDecimal
+    +place() : void
+  }
+  class Customer {
+    +name : String
+    +email : String
+  }
+  class OrderLine {
+    +quantity : int
+    +price : BigDecimal
+  }
+  enum OrderStatus {
+    NEW
+    PAID
+    SHIPPED
+  }
+  interface OrderRepository {
+    +findByCustomer(c : Customer) : List<Order>
+  }
+}
+
+PanacheEntity <|-- Order
+PanacheEntity <|-- Customer
+Order "1" *-- "many" OrderLine
+Order --> Customer : customer
+Order --> OrderStatus
+OrderRepository ..> Order
+@enduml

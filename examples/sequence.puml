@@ -1,0 +1,27 @@
+@startuml
+!theme sys-flat from ../themes
+title Order checkout
+
+actor User
+participant "Web app" as Web
+participant "OrderService" as Svc
+database "PostgreSQL" as DB
+queue "Kafka" as MQ
+
+User -> Web : POST /orders
+activate Web
+Web -> Svc : create(order)
+activate Svc
+Svc -> DB : INSERT order
+DB --> Svc : id
+Svc -> MQ : publish OrderCreated
+Svc --> Web : 201 Created
+deactivate Svc
+Web --> User : order id
+deactivate Web
+
+alt payment fails
+  Svc -> Web : 402 Payment required
+end
+note right of MQ : consumed by the shipment service
+@enduml

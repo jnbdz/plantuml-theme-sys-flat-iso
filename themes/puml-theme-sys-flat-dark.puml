@@ -1,0 +1,252 @@
+''
+'' sys-flat-dark: a flat PlantUML theme in the Quarkus palette, dark variant.
+'' Same structure as sys-flat; only the colours differ.
+'' Use: !theme sys-flat-dark from <directory or URL>
+''
+
+!$SYS_BG = "#121212"
+!$SYS_FLOOR = "#181C22"
+!$SYS_CARD = "#1E2329"
+!$SYS_CARD_2 = "#1A2A3C"
+!$SYS_BORDER = "#3A424D"
+!$SYS_BORDER_STRONG = "#5A6472"
+!$SYS_TEXT = "#D6DBE3"
+!$SYS_TEXT_MUTED = "#9AA3B0"
+!$SYS_ACCENT = "#4695EB"
+!$SYS_ACCENT_SOFT = "#205894"
+!$SYS_ALERT = "#FF004A"
+!$SYS_OK = "#4FBF7A"
+!$SYS_LINE = "#8C96A6"
+!$SYS_NOTE = "#2E2A1E"
+!$SYS_NOTE_BORDER = "#6B5F2E"
+
+skinparam backgroundColor $SYS_BG
+skinparam defaultFontName "Noto Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontColor $SYS_TEXT
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam padding 2
+skinparam ArrowColor $SYS_LINE
+skinparam ArrowThickness 1.3
+skinparam ArrowFontColor $SYS_TEXT_MUTED
+skinparam ArrowFontSize 12
+skinparam linetype ortho
+skinparam TitleFontSize 16
+skinparam TitleFontColor $SYS_TEXT
+skinparam LegendBackgroundColor $SYS_CARD
+skinparam LegendBorderColor $SYS_BORDER
+skinparam HyperlinkColor $SYS_ACCENT
+
+skinparam note {
+    BackgroundColor $SYS_NOTE
+    BorderColor $SYS_NOTE_BORDER
+    FontColor $SYS_TEXT
+}
+
+skinparam rectangle {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    BorderThickness 1
+}
+skinparam component {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    BorderThickness 1
+}
+skinparam package {
+    BackgroundColor $SYS_FLOOR
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT_MUTED
+    BorderThickness 1
+    Style rectangle
+}
+skinparam node {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+}
+skinparam database {
+    BackgroundColor $SYS_CARD_2
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+}
+skinparam queue {
+    BackgroundColor $SYS_CARD_2
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+}
+skinparam cloud {
+    BackgroundColor $SYS_FLOOR
+    BorderColor $SYS_BORDER
+}
+skinparam folder {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam frame {
+    BackgroundColor $SYS_FLOOR
+    BorderColor $SYS_BORDER
+}
+skinparam interface {
+    BackgroundColor $SYS_ACCENT_SOFT
+    BorderColor $SYS_ACCENT
+}
+skinparam artifact {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam agent {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam boundary {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam control {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam entity {
+    BackgroundColor $SYS_CARD_2
+    BorderColor $SYS_BORDER
+}
+
+skinparam actor {
+    BackgroundColor $SYS_ACCENT_SOFT
+    BorderColor $SYS_ACCENT
+    FontColor $SYS_TEXT
+}
+skinparam usecase {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    ArrowColor $SYS_LINE
+}
+
+skinparam class {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    HeaderBackgroundColor $SYS_ACCENT_SOFT
+    AttributeFontColor $SYS_TEXT
+    AttributeFontSize 12
+    StereotypeFontColor $SYS_TEXT_MUTED
+    BorderThickness 1
+}
+skinparam classAttributeIconSize 0
+skinparam circledCharacterFontColor $SYS_TEXT
+skinparam circledCharacterRadius 8
+skinparam object {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    HeaderBackgroundColor $SYS_ACCENT_SOFT
+}
+
+skinparam sequence {
+    ParticipantBackgroundColor $SYS_CARD
+    ParticipantBorderColor $SYS_BORDER
+    ParticipantFontColor $SYS_TEXT
+    ActorBackgroundColor $SYS_ACCENT_SOFT
+    ActorBorderColor $SYS_ACCENT
+    LifeLineBorderColor $SYS_BORDER_STRONG
+    LifeLineBackgroundColor $SYS_ACCENT_SOFT
+    ArrowColor $SYS_LINE
+    GroupBackgroundColor $SYS_FLOOR
+    GroupBorderColor $SYS_BORDER
+    GroupHeaderFontColor $SYS_TEXT
+    GroupBodyBackgroundColor $SYS_BG
+    MessageAlignment left
+    BoxBackgroundColor $SYS_FLOOR
+    BoxBorderColor $SYS_BORDER
+    DividerBackgroundColor $SYS_CARD
+    DividerBorderColor $SYS_BORDER
+    ReferenceBackgroundColor $SYS_CARD
+    ReferenceBorderColor $SYS_BORDER
+}
+skinparam participant {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam database<<sequence>> {
+    BackgroundColor $SYS_CARD_2
+}
+
+skinparam activity {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    StartColor $SYS_ACCENT
+    EndColor $SYS_TEXT
+    BarColor $SYS_BORDER_STRONG
+    DiamondBackgroundColor $SYS_CARD_2
+    DiamondBorderColor $SYS_BORDER
+    DiamondFontColor $SYS_TEXT
+}
+skinparam partition {
+    BackgroundColor $SYS_FLOOR
+    BorderColor $SYS_BORDER
+}
+skinparam swimlane {
+    BorderColor $SYS_BORDER
+    TitleFontColor $SYS_TEXT_MUTED
+}
+
+skinparam state {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    StartColor $SYS_ACCENT
+    EndColor $SYS_TEXT
+    AttributeFontColor $SYS_TEXT_MUTED
+}
+
+skinparam storage {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam card {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam collections {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam file {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam stack {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam hexagon {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam person {
+    BackgroundColor $SYS_ACCENT_SOFT
+    BorderColor $SYS_ACCENT
+}
+
+skinparam TimingDiagram {
+    BackgroundColor $SYS_BG
+    BorderColor $SYS_BORDER
+    FontColor $SYS_TEXT
+    LineColor $SYS_ACCENT
+}
+
+skinparam map {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+}
+skinparam json {
+    BackgroundColor $SYS_CARD
+    BorderColor $SYS_BORDER
+    HeaderBackgroundColor $SYS_ACCENT_SOFT
+}

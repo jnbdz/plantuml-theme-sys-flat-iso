@@ -1,0 +1,31 @@
+@startuml
+!include <C4/C4_Component>
+!theme sys-flat from ../themes
+!include ../themes/c4-sys-flat.puml
+title shop - components
+
+Person(user, "User", "Calls the application over the network")
+System_Boundary(system, "shop") {
+    Container_Boundary(app, "shop") {
+        Component(res, "OrderResource", "Jakarta REST", "rest-endpoint")
+        Component(svc, "OrderService", "CDI", "bean")
+        Component(price, "PriceCalculator", "CDI", "bean")
+        Component(pay, "PaymentClient", "REST Client", "rest-client")
+        ComponentDb(order, "Order", "Jakarta Persistence", "entity")
+        Component(ship, "ShipmentListener", "Reactive Messaging", "messaging")
+    }
+    ContainerDb(db, "PostgreSQL", "PostgreSQL")
+    ContainerQueue(broker, "Kafka", "Kafka")
+}
+System_Ext(payments, "localhost:8081", "HTTP")
+
+Rel(user, res, "calls")
+Rel(res, svc, "injects")
+Rel(svc, price, "injects")
+Rel(svc, pay, "injects")
+Rel(svc, order, "manages")
+Rel(order, db, "stored-in")
+Rel(svc, broker, "publishes orders")
+Rel(broker, ship, "delivers shipments")
+Rel(pay, payments, "calls HTTP")
+@enduml

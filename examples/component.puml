@@ -1,0 +1,25 @@
+@startuml
+!theme sys-flat from ../themes
+title Shop components
+
+package "shop (Quarkus)" {
+  [OrderResource] <<REST>>
+  [OrderService] <<CDI>>
+  [PriceCalculator] <<CDI>>
+  [PaymentClient] <<REST client>>
+  [ShipmentListener] <<messaging>>
+  interface "HTTP" as HTTP
+}
+database "PostgreSQL" as DB
+queue "Kafka" as MQ
+cloud "Payment API" as Pay
+
+HTTP - [OrderResource]
+[OrderResource] --> [OrderService]
+[OrderService] --> [PriceCalculator]
+[OrderService] --> [PaymentClient]
+[OrderService] --> DB
+[OrderService] --> MQ : orders
+MQ --> [ShipmentListener] : shipments
+[PaymentClient] --> Pay
+@enduml

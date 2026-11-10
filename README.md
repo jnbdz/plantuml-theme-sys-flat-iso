@@ -47,6 +47,7 @@ What the script does:
 - Every filled rectangle, polygon or ellipse becomes a block. The top keeps the fill of the shape, and the side faces take darker shades of it. An ellipse becomes a cylinder.
 - A block inside another block stands on top of it. Text, icons and lines inside a block rise with it.
 - A band across the top of a block, such as a class header, stays on the top face. Small circles, such as the circled letters of a class, stay flat.
+- A link keeps one height with its arrowhead and label: the height of the higher of its two ends. Blocks paint over the links that point at them, so an arrow ends at the base of its target instead of crossing it.
 - Lines and arrows stay on the surface they belong to.
 
 Limits of the first version:

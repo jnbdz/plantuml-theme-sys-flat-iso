@@ -244,21 +244,122 @@ def main():
     def containers_of(box, me=None):
         return sum(1 for other, _, obox in blocks if other is not me and contains(obox, box))
 
-    def lift_of(el):
-        """One block height for each block the element is inside. A block itself rises by its containers."""
-        pts = points_of(el)
+    def level_at(px, py):
+        """How many blocks a floor point is inside."""
+        return sum(1 for _, _, (x0, y0, x1, y1) in blocks if x0 <= px <= x1 and y0 <= py <= y1)
+
+    def level_of(el):
+        """How many blocks an element is inside. A block itself counts its containers."""
         if any(el is b[0] for b in blocks):
-            return containers_of(bbox(pts), el) * depth
+            return containers_of(bbox(points_of(el)), el)
         anchor = anchor_of(el)
-        if anchor is None:
-            return 0
-        px, py = anchor
-        return sum(1 for _, _, (x0, y0, x1, y1) in blocks if x0 <= px <= x1 and y0 <= py <= y1) * depth
+        return level_at(*anchor) if anchor else 0
+
+    def endpoints(group):
+        """The first and the last point of the lines in a link group."""
+        pts = []
+        for el in group.iter():
+            t = tag(el)
+            if t == "line":
+                pts += [(float(el.get("x1", 0)), float(el.get("y1", 0))), (float(el.get("x2", 0)), float(el.get("y2", 0)))]
+            elif t == "path":
+                nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", el.get("d", ""))]
+                if len(nums) >= 4:
+                    pts += [(nums[0], nums[1]), (nums[-2], nums[-1])]
+        return pts
+
+    # Every element gets a level: the number of blocks it stands in. A link group shares one level, the
+    # highest of its two ends, so that the arrowhead stays on its line and a link leaving a package runs
+    # over the floor at the height of the package top.
+    link_groups = [g for g in root.iter("{%s}g" % SVG) if (g.get("class") or "").split()[:1] in (["link"], ["message"])]
+    in_link = {id(el): g for g in link_groups for el in g.iter() if el is not g}
+    link_level = {}
+    for g in link_groups:
+        pts = endpoints(g)
+        link_level[id(g)] = max((level_at(x, y) for x, y in pts), default=0)
+
+    items = []  # (level, kind, order, element); kind 0 = band on a block top, 1 = filled flat shape, 2 = line, text, icon, 3 = block
+
+    def draw_band(el, pts, level):
+        style = parse_style(el)
+        stroke = style.get("stroke") if style.get("stroke", "none") != "none" else None
+        face = polygon([project(x, y) for x, y in pts], style.get("fill", "#ffffff"), stroke,
+                       float(style.get("stroke-width", "1").rstrip("px") or 1))
+        face.set("transform", "translate(0,%s)" % fmt(-level * depth))
+        return face
+
+    def draw_block(el, pts, level, smooth):
+        style = parse_style(el)
+        fill = style.get("fill", "#ffffff")
+        stroke = style.get("stroke") if style.get("stroke", "none") != "none" else None
+        width = float(style.get("stroke-width", "1").rstrip("px") or 1)
+        group = ET.Element("{%s}g" % SVG)
+        group.set("transform", "translate(0,%s)" % fmt(-level * depth))
+        for face in side_faces(pts, depth, fill, stroke, smooth=smooth):
+            group.append(face)
+        top = [(px, py - depth) for px, py in (project(x, y) for x, y in pts)]
+        group.append(polygon(top, fill, stroke, width))
+        return group
+
+    def front_y(el):
+        """The screen y of the nearest edge, used to paint from back to front."""
+        pts = points_of(el)
+        if not pts and tag(el) == "path":
+            nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", el.get("d", ""))]
+            pts = list(zip(nums[0::2], nums[1::2]))
+        if not pts:
+            a = anchor_of(el)
+            pts = [a] if a else [(0, 0)]
+        return max(project(x, y)[1] for x, y in pts)
+
+    def flat_kind(el):
+        """Filled flat shapes, such as the body of a composite state, go under lines and text."""
+        if tag(el) in ("path", "rect", "polygon", "ellipse") and parse_style(el).get("fill", "none") != "none":
+            return 1
+        return 2
+
+    def flat_order(el):
+        """Filled flat shapes paint from large to small, so that a dot stays visible on a sheet."""
+        if flat_kind(el) == 1:
+            pts = points_of(el)
+            if not pts and tag(el) == "path":
+                nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", el.get("d", ""))]
+                pts = list(zip(nums[0::2], nums[1::2]))
+            if pts:
+                x0, y0, x1, y1 = bbox(pts)
+                return -(x1 - x0) * (y1 - y0)
+        return front_y(el)
+
+    for el in elements:
+        t = tag(el)
+        if t in ("svg", "g", "defs", "style", "title", "desc"):
+            continue
+        if id(el) in in_link:
+            g = in_link[id(el)]
+            level = link_level[id(g)]
+            wrapper = ET.Element("{%s}g" % SVG)
+            wrapper.set("transform", iso_transform(level * depth))
+            wrapper.append(el)
+            items.append((level, 2, front_y(el), wrapper))
+            continue
+        level = level_of(el)
+        band = next((b for b in bands if b[0] is el), None)
+        if band is not None:
+            items.append((level, 0, front_y(el), draw_band(el, band[1], level)))
+            continue
+        block = next((b for b in blocks if b[0] is el), None)
+        if block is not None:
+            items.append((level, 3, front_y(el), draw_block(el, block[1], level, t == "ellipse")))
+            continue
+        wrapper = ET.Element("{%s}g" % SVG)
+        wrapper.set("transform", iso_transform(level * depth))
+        wrapper.append(el)
+        items.append((level, flat_kind(el), flat_order(el), wrapper))
 
     out = ET.Element("{%s}svg" % SVG)
     corners = [project(vb[0], vb[1]), project(vb[0] + vb[2], vb[1]),
                project(vb[0] + vb[2], vb[1] + vb[3]), project(vb[0], vb[1] + vb[3])]
-    max_lift = max((containers_of(b, el) for el, _, b in blocks), default=0) * depth + depth
+    max_lift = (max((lvl for lvl, _, _, _ in items), default=0) + 1) * depth
     xs = [c[0] for c in corners]
     ys = [c[1] for c in corners]
     margin = 24
@@ -283,38 +384,11 @@ def main():
         if tag(el) in ("defs", "style"):
             out.append(el)
 
-    for el in elements:
-        t = tag(el)
-        if t in ("svg", "g", "defs", "style", "title", "desc"):
-            continue
-        lift = lift_of(el)
-        band = next((b for b in bands if b[0] is el), None)
-        if band is not None:
-            _, pts, _ = band
-            style = parse_style(el)
-            stroke = style.get("stroke") if style.get("stroke", "none") != "none" else None
-            face = polygon([project(x, y) for x, y in pts], style.get("fill", "#ffffff"), stroke,
-                           float(style.get("stroke-width", "1").rstrip("px") or 1))
-            face.set("transform", "translate(0,%s)" % fmt(-lift))
-            out.append(face)
-            continue
-        block = next((b for b in blocks if b[0] is el), None)
-        if block is not None:
-            _, pts, _ = block
-            style = parse_style(el)
-            fill = style.get("fill", "#ffffff")
-            stroke = style.get("stroke") if style.get("stroke", "none") != "none" else None
-            width = float(style.get("stroke-width", "1").rstrip("px") or 1)
-            group = ET.SubElement(out, "{%s}g" % SVG)
-            group.set("transform", "translate(0,%s)" % fmt(-lift))
-            for face in side_faces(pts, depth, fill, stroke, smooth=(t == "ellipse")):
-                group.append(face)
-            top = [(px, py - depth) for px, py in (project(x, y) for x, y in pts)]
-            group.append(polygon(top, fill, stroke, width))
-            continue
-        wrapper = ET.SubElement(out, "{%s}g" % SVG)
-        wrapper.set("transform", iso_transform(lift))
-        wrapper.append(el)
+    # Paint order: level by level; on each level first the header bands, then filled flat shapes, then
+    # lines, text and icons, then the blocks that stand on it, from back to front. A link that points at
+    # a block ends under its base.
+    for _, _, _, node in sorted(items, key=lambda i: (i[0], i[1], i[2])):
+        out.append(node)
 
     ET.ElementTree(out).write(args.dst, xml_declaration=True, encoding="UTF-8")
 

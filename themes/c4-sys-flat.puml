@@ -8,3 +8,8 @@ UpdateElementStyle("external_system", $bgColor=$SYS_FLOOR, $fontColor=$SYS_TEXT_
 UpdateBoundaryStyle($fontColor=$SYS_TEXT_MUTED, $borderColor=$SYS_BORDER_STRONG)
 UpdateSystemBoundaryStyle($fontColor=$SYS_TEXT_MUTED, $borderColor=$SYS_BORDER_STRONG)
 UpdateRelStyle($SYS_TEXT_MUTED, $SYS_LINE)
+
+' room between the elements and bent lines, so that the relation labels do not collide
+skinparam linetype polyline
+skinparam nodesep 70
+skinparam ranksep 90

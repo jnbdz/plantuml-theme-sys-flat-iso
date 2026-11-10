@@ -1,6 +1,6 @@
 # plantuml-theme-sys-flat-iso
 
-Two looks for PlantUML diagrams, each in a light and a dark variant:
+Two looks for PlantUML diagrams, each in a light and a dark variant, and the isometric one leaning right or left:
 
 - **sys-flat**: a flat theme in the Quarkus palette. Soft cards, thin borders, one accent colour, no shadows.
 - **sys-iso**: the same diagrams as isometric blocks on a tilted floor. The theme renders the diagram, and a small script rewrites the SVG. The result is a static SVG that needs no JavaScript.
@@ -39,13 +39,14 @@ plantuml -tsvg diagram.puml
 python3 tools/iso.py --variant light diagram.svg diagram-iso.svg
 ```
 
-`--variant dark` matches `sys-flat-dark`. `--depth` sets the height of the blocks, 16 by default. The script uses only the Python standard library.
+`--variant dark` matches `sys-flat-dark`. `--lean left` tilts the floor the other way, so that the x axis runs up to the right. `--depth` sets the height of the blocks, 16 by default. The script uses only the Python standard library.
 
 What the script does:
 
 - It tilts the floor into the isometric plane.
-- Every filled rectangle, polygon or ellipse becomes a block. The top keeps the fill of the shape, and two side faces take darker shades of it.
-- A block inside another block stands on top of it. Text and lines inside a block rise with it.
+- Every filled rectangle, polygon or ellipse becomes a block. The top keeps the fill of the shape, and the side faces take darker shades of it. An ellipse becomes a cylinder.
+- A block inside another block stands on top of it. Text, icons and lines inside a block rise with it.
+- A band across the top of a block, such as a class header, stays on the top face. Small circles, such as the circled letters of a class, stay flat.
 - Lines and arrows stay on the surface they belong to.
 
 Limits of the first version:
@@ -56,7 +57,7 @@ Limits of the first version:
 
 ## Render the gallery
 
-`tools/render.sh` renders every file in `examples` in the four variants with the PlantUML container image and writes the result to `gallery`. It needs `podman` or `docker`, `python3` and, for the PNG previews, `rsvg-convert`.
+`tools/render.sh` renders every file in `examples` in the six variants with the PlantUML container image and writes the result to `gallery`. It needs `podman` or `docker`, `python3` and, for the PNG previews, `rsvg-convert`.
 
 ```
 tools/render.sh

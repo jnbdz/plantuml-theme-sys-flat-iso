@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Render every example in four variants: flat-light, flat-dark, iso-light, iso-dark.
+# Render every example in six variants: flat-light, flat-dark, iso-right-light, iso-right-dark, iso-left-light, iso-left-dark.
 # Needs podman (or docker) and python3; rsvg-convert for the PNG previews.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -15,13 +15,14 @@ for variant in flat-light flat-dark; do
   "$RUNNER" run --rm --userns keep-id -v "$PWD:/work:Z" -v "$FONTS:/usr/share/fonts/noto:ro,Z" "$IMAGE" \
     -tsvg -o "/work/build/$variant/out" "/work/build/$variant/"*.puml
 done
-mkdir -p gallery/flat-light gallery/flat-dark gallery/iso-light gallery/iso-dark
+mkdir -p gallery/flat-light gallery/flat-dark gallery/iso-right-light gallery/iso-right-dark gallery/iso-left-light gallery/iso-left-dark
 for variant in flat-light flat-dark; do
   for s in build/$variant/out/*.svg; do
     n=$(basename "$s" .svg)
     cp "$s" "gallery/$variant/$n.svg"
-    iso=${variant/flat/iso}
-    python3 -I tools/iso.py --variant "${variant#flat-}" "$s" "gallery/$iso/$n.svg"
+    for lean in right left; do
+      python3 -I tools/iso.py --variant "${variant#flat-}" --lean "$lean" "$s" "gallery/iso-$lean-${variant#flat-}/$n.svg"
+    done
   done
 done
 if command -v rsvg-convert >/dev/null; then

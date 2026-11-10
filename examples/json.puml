@@ -1,7 +1,5 @@
-@startuml
-!theme sys-flat from ../themes
-title Order as JSON
 @startjson
+!theme sys-flat from ../themes
 {
   "id": 42,
   "status": "PAID",
@@ -13,4 +11,3 @@ title Order as JSON
   "total": 59.90
 }
 @endjson
-@enduml

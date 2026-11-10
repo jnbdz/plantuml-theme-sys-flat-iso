@@ -20,10 +20,18 @@ ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 COS = math.cos(math.radians(30))
 SIN = math.sin(math.radians(30))
 
+# the projection matrix (a, b, c, d): screen x = a*x + c*y, screen y = b*x + d*y
+LEAN = {
+    "right": (COS, SIN, -COS, SIN),  # the x axis of the floor runs down to the right
+    "left": (COS, -SIN, COS, SIN),  # the x axis of the floor runs up to the right
+}
+M = LEAN["right"]
+
 
 def project(x, y):
     """Map a floor point to the screen."""
-    return (x - y) * COS, (x + y) * SIN
+    a, b, c, d = M
+    return a * x + c * y, b * x + d * y
 
 
 def parse_style(el):
@@ -95,6 +103,8 @@ def is_block(el, background):
     if fill in ("none", "transparent") or fill.lower() == background.lower():
         return False
     x0, y0, x1, y1 = bbox(points)
+    if tag(el) == "ellipse":
+        return (x1 - x0) >= 24 and (y1 - y0) >= 24  # small circles are decorations, such as circled letters
     return (x1 - x0) >= 14 and (y1 - y0) >= 10
 
 
@@ -113,28 +123,72 @@ def polygon(points, fill, stroke=None, width=None):
     return el
 
 
-def side_faces(points, depth, fill, stroke):
-    """Side faces for the edges that face the viewer, darker on the left than on the right."""
+def clockwise(points):
+    """The outline in screen orientation, so that the outward normals point out."""
+    area = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]))
+    return points if area >= 0 else list(reversed(points))
+
+
+def side_faces(points, depth, fill, stroke, smooth=False):
+    """Side faces for the edges that face the viewer. The face turned to the right is lighter.
+    With smooth, the visible edges form one face, as for the side of a cylinder."""
     faces = []
+    points = clockwise(points)
     n = len(points)
+    if smooth:
+        visible = []
+        for i in range(n):
+            (ax, ay), (bx, by) = points[i], points[(i + 1) % n]
+            nx, ny = (by - ay), -(bx - ax)
+            if project(nx, ny)[1] > 0:
+                visible.append(i)
+        if not visible:
+            return faces
+        # rotate so that the visible run starts at its first edge
+        start = next((i for i in visible if (i - 1) % n not in visible), visible[0])
+        run = [start]
+        while (run[-1] + 1) % n in visible and len(run) < len(visible):
+            run.append((run[-1] + 1) % n)
+        floor = [project(*points[i]) for i in run] + [project(*points[(run[-1] + 1) % n])]
+        top = [(x, y - depth) for x, y in reversed(floor)]
+        faces.append(polygon(floor + top, shade(fill, 0.74), stroke, 0.8))
+        return faces
     for i in range(n):
         (ax, ay), (bx, by) = points[i], points[(i + 1) % n]
         sax, say = project(ax, ay)
         sbx, sby = project(bx, by)
-        # the outward normal of this edge, in floor space (clockwise outline)
-        nx, ny = (by - ay), -(bx - ax)
-        # faces whose normal points down the screen are visible
-        screen_ny = (nx + ny) * SIN
-        if screen_ny <= 0:
-            continue
-        lit = (nx - ny) > 0  # faces turned to the right catch more light
+        nx, ny = (by - ay), -(bx - ax)  # outward normal of the edge, in floor space
+        snx, sny = project(nx, ny)  # the same normal on the screen
+        if sny <= 0:
+            continue  # the face is turned away from the viewer
+        lit = snx > 0
         quad = [(sax, say), (sbx, sby), (sbx, sby - depth), (sax, say - depth)]
         faces.append(polygon(quad, shade(fill, 0.82 if lit else 0.66), stroke, 0.8))
     return faces
 
 
 def iso_transform(lift):
-    return "translate(0,%s) matrix(%s %s %s %s 0 0)" % (fmt(-lift), fmt(COS), fmt(SIN), fmt(-COS), fmt(SIN))
+    a, b, c, d = M
+    return "translate(0,%s) matrix(%s %s %s %s 0 0)" % (fmt(-lift), fmt(a), fmt(b), fmt(c), fmt(d))
+
+
+def anchor_of(el):
+    """The floor point that decides which blocks an element sits on."""
+    t = tag(el)
+    if t == "text":
+        return float(el.get("x", 0)), float(el.get("y", 0)) - 4
+    if t == "image":
+        return (float(el.get("x", 0)) + float(el.get("width", 0)) / 2,
+                float(el.get("y", 0)) + float(el.get("height", 0)) / 2)
+    pts = points_of(el)
+    if pts:
+        x0, y0, x1, y1 = bbox(pts)
+        return (x0 + x1) / 2, (y0 + y1) / 2
+    nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", el.get("d", "") or
+                                         "%s %s" % (el.get("x1", 0), el.get("y1", 0)))]
+    if len(nums) >= 2:
+        return nums[0], nums[1]
+    return None
 
 
 def contains(outer, inner):
@@ -148,9 +202,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--variant", choices=("light", "dark"), default="light")
     ap.add_argument("--depth", type=float, default=16.0)
+    ap.add_argument("--lean", choices=("right", "left"), default="right")
     ap.add_argument("src")
     ap.add_argument("dst")
     args = ap.parse_args()
+    global M
+    M = LEAN[args.lean]
 
     tree = ET.parse(args.src)
     root = tree.getroot()
@@ -171,27 +228,32 @@ def main():
             pts = points_of(el)
             blocks.append((el, pts, bbox(pts)))
 
+    def is_band(box):
+        """A shape that spans the full width of a block from its top edge is a header band, not a block."""
+        x0, y0, x1, y1 = box
+        for _, _, (ox0, oy0, ox1, oy1) in blocks:
+            if (ox0, oy0, ox1, oy1) == box:
+                continue
+            if abs(ox0 - x0) <= 1.5 and abs(ox1 - x1) <= 1.5 and abs(oy0 - y0) <= 1.5 and oy1 > y1:
+                return True
+        return False
+
+    bands = [b for b in blocks if is_band(b[2])]
+    blocks = [b for b in blocks if not is_band(b[2])]
+
     def containers_of(box, me=None):
         return sum(1 for other, _, obox in blocks if other is not me and contains(obox, box))
 
     def lift_of(el):
-        """One depth per block that contains the element. Text and lines on a block rise with it."""
-        t = tag(el)
-        if t == "text":
-            px, py = float(el.get("x", 0)), float(el.get("y", 0)) - 4
-            count = sum(1 for _, _, (x0, y0, x1, y1) in blocks if x0 <= px <= x1 and y0 <= py <= y1)
-            return count * depth
+        """One block height for each block the element is inside. A block itself rises by its containers."""
         pts = points_of(el)
-        if pts:
+        if any(el is b[0] for b in blocks):
             return containers_of(bbox(pts), el) * depth
-        if t in ("line", "path"):
-            nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", el.get("d", "") or
-                                                 "%s %s %s %s" % (el.get("x1", 0), el.get("y1", 0), el.get("x2", 0), el.get("y2", 0)))]
-            if len(nums) >= 2:
-                mx, my = nums[0], nums[1]
-                count = sum(1 for _, _, (x0, y0, x1, y1) in blocks if x0 <= mx <= x1 and y0 <= my <= y1)
-                return count * depth
-        return 0
+        anchor = anchor_of(el)
+        if anchor is None:
+            return 0
+        px, py = anchor
+        return sum(1 for _, _, (x0, y0, x1, y1) in blocks if x0 <= px <= x1 and y0 <= py <= y1) * depth
 
     out = ET.Element("{%s}svg" % SVG)
     corners = [project(vb[0], vb[1]), project(vb[0] + vb[2], vb[1]),
@@ -210,10 +272,12 @@ def main():
     bg.set("x", fmt(x0)); bg.set("y", fmt(y0)); bg.set("width", fmt(x1 - x0)); bg.set("height", fmt(y1 - y0))
     bg.set("fill", background)
     # the floor plate with a thin edge
-    for i in (1, 2):
-        (ax, ay), (bx, by) = corners[i], corners[(i + 1) % 4]
-        out.append(polygon([(ax, ay), (bx, by), (bx, by + 6), (ax, ay + 6)], shade(floor_fill, 0.85 if i == 1 else 0.75), floor_stroke, 1))
-    out.append(polygon(corners, floor_fill, floor_stroke, 1))
+    floor_pts = [(vb[0], vb[1]), (vb[0] + vb[2], vb[1]), (vb[0] + vb[2], vb[1] + vb[3]), (vb[0], vb[1] + vb[3])]
+    plate = ET.SubElement(out, "{%s}g" % SVG)
+    plate.set("transform", "translate(0,6)")  # the plate hangs 6 below the floor level
+    for face in side_faces(floor_pts, 6, floor_fill, floor_stroke):
+        plate.append(face)
+    plate.append(polygon([(x, y - 6) for x, y in corners], floor_fill, floor_stroke, 1))
 
     for el in list(root):
         if tag(el) in ("defs", "style"):
@@ -224,6 +288,16 @@ def main():
         if t in ("svg", "g", "defs", "style", "title", "desc"):
             continue
         lift = lift_of(el)
+        band = next((b for b in bands if b[0] is el), None)
+        if band is not None:
+            _, pts, _ = band
+            style = parse_style(el)
+            stroke = style.get("stroke") if style.get("stroke", "none") != "none" else None
+            face = polygon([project(x, y) for x, y in pts], style.get("fill", "#ffffff"), stroke,
+                           float(style.get("stroke-width", "1").rstrip("px") or 1))
+            face.set("transform", "translate(0,%s)" % fmt(-lift))
+            out.append(face)
+            continue
         block = next((b for b in blocks if b[0] is el), None)
         if block is not None:
             _, pts, _ = block
@@ -233,17 +307,13 @@ def main():
             width = float(style.get("stroke-width", "1").rstrip("px") or 1)
             group = ET.SubElement(out, "{%s}g" % SVG)
             group.set("transform", "translate(0,%s)" % fmt(-lift))
-            for face in side_faces(pts, depth, fill, stroke):
+            for face in side_faces(pts, depth, fill, stroke, smooth=(t == "ellipse")):
                 group.append(face)
             top = [(px, py - depth) for px, py in (project(x, y) for x, y in pts)]
             group.append(polygon(top, fill, stroke, width))
             continue
-        on_block = lift > 0 or (t == "text" and any(
-            bx0 <= float(el.get("x", 0)) <= bx1 and by0 <= float(el.get("y", 0)) - 4 <= by1
-            for _, _, (bx0, by0, bx1, by1) in blocks))
-        total = lift + (depth if on_block else 0)
         wrapper = ET.SubElement(out, "{%s}g" % SVG)
-        wrapper.set("transform", iso_transform(total))
+        wrapper.set("transform", iso_transform(lift))
         wrapper.append(el)
 
     ET.ElementTree(out).write(args.dst, xml_declaration=True, encoding="UTF-8")

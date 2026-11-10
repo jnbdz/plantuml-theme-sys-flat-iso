@@ -245,8 +245,37 @@ skinparam map {
     BackgroundColor $SYS_CARD
     BorderColor $SYS_BORDER
 }
-skinparam json {
-    BackgroundColor $SYS_CARD
-    BorderColor $SYS_BORDER
-    HeaderBackgroundColor $SYS_ACCENT_SOFT
+<style>
+jsonDiagram {
+    node {
+        BackGroundColor $SYS_CARD
+        LineColor $SYS_BORDER
+        FontName "Noto Sans"
+        FontColor $SYS_TEXT
+        FontSize 13
+        RoundCorner 8
+        separator {
+            LineColor $SYS_BORDER
+        }
+    }
+    arrow {
+        LineColor $SYS_LINE
+    }
+    highlight {
+        BackGroundColor $SYS_ACCENT_SOFT
+        FontColor $SYS_TEXT
+    }
 }
+yamlDiagram {
+    node {
+        BackGroundColor $SYS_CARD
+        LineColor $SYS_BORDER
+        FontName "Noto Sans"
+        FontColor $SYS_TEXT
+        FontSize 13
+    }
+    arrow {
+        LineColor $SYS_LINE
+    }
+}
+</style>

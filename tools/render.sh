@@ -5,14 +5,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 IMAGE=${PLANTUML_IMAGE:-docker.io/plantuml/plantuml:1.2026.9}
 RUNNER=${CONTAINER_RUNNER:-podman}
-FONTS=${FONTS_DIR:-/usr/share/fonts/truetype/noto}
+FONTS=${FONTS_DIR:-$PWD/fonts}
 rm -rf build && mkdir -p build/flat-light build/flat-dark && cp -r themes build/themes
 cp examples/*.puml build/flat-light/
 for f in examples/*.puml; do
   sed 's/!theme sys-flat from/!theme sys-flat-dark from/' "$f" > "build/flat-dark/$(basename "$f")"
 done
 for variant in flat-light flat-dark; do
-  "$RUNNER" run --rm --userns keep-id -v "$PWD:/work:Z" -v "$FONTS:/usr/share/fonts/noto:ro,Z" "$IMAGE" \
+  "$RUNNER" run --rm --userns keep-id -v "$PWD:/work:Z" -v "$FONTS:/usr/share/fonts/extra:ro,Z" "$IMAGE" \
     -tsvg -o "/work/build/$variant/out" "/work/build/$variant/"*.puml
 done
 mkdir -p gallery/flat-light gallery/flat-dark gallery/iso-right-light gallery/iso-right-dark gallery/iso-left-light gallery/iso-left-dark

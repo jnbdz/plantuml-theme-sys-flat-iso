@@ -64,8 +64,12 @@ Limits of the first version:
 tools/render.sh
 ```
 
-Set `CONTAINER_RUNNER=docker` to use Docker. The script mounts the Noto Sans fonts from `/usr/share/fonts/truetype/noto`; set `FONTS_DIR` to another directory if yours differ.
+Set `CONTAINER_RUNNER=docker` to use Docker. The script mounts the `fonts` directory of the repository, which holds Open Sans (OFL 1.1), the font of the Quarkus site and of the Quarkus PlantUML theme; set `FONTS_DIR` to another directory to use other fonts.
 
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
+
+## Fonts
+
+The themes use Open Sans, the font of the Quarkus site and of the Quarkus PlantUML theme. The `fonts/open-sans` directory holds the font files under the SIL Open Font License 1.1 (see `fonts/open-sans/COPYRIGHT`). Install them, or mount them into the PlantUML container as `tools/render.sh` does, so that PlantUML measures the text with the same font that shows it.

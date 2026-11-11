@@ -21,7 +21,16 @@
 !$SYS_NOTE_BORDER = "#E6D28A"
 
 skinparam backgroundColor $SYS_BG
-skinparam defaultFontName "Noto Sans"
+skinparam defaultFontName "Open Sans"
+
+' same shape as the arrow block of the Quarkus theme, in this palette
+skinparam arrow {
+    fontName "Open Sans"
+    color $SYS_LINE
+    fontColor $SYS_TEXT_MUTED
+    thickness 1.5
+    fontSize 13
+}
 skinparam defaultFontSize 13
 skinparam defaultFontColor $SYS_TEXT
 skinparam shadowing false
@@ -250,7 +259,7 @@ jsonDiagram {
     node {
         BackGroundColor $SYS_CARD
         LineColor $SYS_BORDER
-        FontName "Noto Sans"
+        FontName "Open Sans"
         FontColor $SYS_TEXT
         FontSize 13
         RoundCorner 8
@@ -270,7 +279,7 @@ yamlDiagram {
     node {
         BackGroundColor $SYS_CARD
         LineColor $SYS_BORDER
-        FontName "Noto Sans"
+        FontName "Open Sans"
         FontColor $SYS_TEXT
         FontSize 13
     }

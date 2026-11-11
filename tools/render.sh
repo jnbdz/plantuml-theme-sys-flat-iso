@@ -31,4 +31,5 @@ if command -v rsvg-convert >/dev/null; then
     for s in "$d"*.svg; do rsvg-convert -w 1400 -b "$bg" "$s" -o "${s%.svg}.png"; done
   done
 fi
+python3 -I tools/embed_fonts.py fonts/open-sans gallery/*/*.svg
 echo "rendered: $(ls gallery/*/*.svg | wc -l) SVG files"

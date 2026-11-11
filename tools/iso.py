@@ -244,9 +244,10 @@ def main():
     def containers_of(box, me=None):
         return sum(1 for other, _, obox in blocks if other is not me and contains(obox, box))
 
-    def level_at(px, py):
-        """How many blocks a floor point is inside."""
-        return sum(1 for _, _, (x0, y0, x1, y1) in blocks if x0 <= px <= x1 and y0 <= py <= y1)
+    def level_at(px, py, inset=0):
+        """How many blocks a floor point is inside. The inset keeps a point on the border of a block outside it."""
+        return sum(1 for _, _, (x0, y0, x1, y1) in blocks
+                   if x0 + inset <= px <= x1 - inset and y0 + inset <= py <= y1 - inset)
 
     def level_of(el):
         """How many blocks an element is inside. A block itself counts its containers."""
@@ -273,10 +274,66 @@ def main():
     # over the floor at the height of the package top.
     link_groups = [g for g in root.iter("{%s}g" % SVG) if (g.get("class") or "").split()[:1] in (["link"], ["message"])]
     in_link = {id(el): g for g in link_groups for el in g.iter() if el is not g}
+
+    # Diagrams without link groups (activity) list the lines and arrowheads loose: a stroked path followed by
+    # the small polygons at its ends forms one link.
+    def is_line(el):
+        return tag(el) in ("path", "line") and parse_style(el).get("fill", "none") == "none" \
+            and id(el) not in in_link and not any(el is b[0] for b in blocks)
+
+    def is_arrowhead(el):
+        if tag(el) != "polygon" or id(el) in in_link or any(el is b[0] for b in blocks):
+            return False
+        x0, y0, x1, y1 = bbox(points_of(el))
+        return (x1 - x0) <= 16 and (y1 - y0) <= 16
+
+    def near(el, pts):
+        x0, y0, x1, y1 = bbox(points_of(el))
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        return any(abs(cx - x) <= 14 and abs(cy - y) <= 14 for x, y in pts)
+
+    class LooseLink:
+        def __init__(self, members):
+            self.members = members
+
+        def iter(self):
+            return iter(self.members)
+
+    loose = []
+    for parent in root.iter("{%s}g" % SVG):
+        children = list(parent)
+        for i, el in enumerate(children):
+            if not is_line(el):
+                continue
+            ends = endpoints(LooseLink([el]))
+            members = [el] + [c for c in children[i + 1:i + 4] if is_arrowhead(c) and near(c, ends)]
+            members += [c for c in children[max(0, i - 2):i] if is_arrowhead(c) and near(c, ends) and c not in members]
+            group = LooseLink(members)
+            loose.append(group)
+            for m in members:
+                in_link[id(m)] = group
+    link_groups += loose
+    def on_hidden_side(px, py):
+        """True when a floor point touches a block on a side whose wall is turned away from the viewer. A link
+        that ends there would run under the raised top face, so it rises onto the roof instead."""
+        back = [(0, -1), (-1, 0)] if M is LEAN["right"] else [(0, -1), (1, 0)]
+        for _, _, (x0, y0, x1, y1) in blocks:
+            if not (x0 - 8 <= px <= x1 + 8 and y0 - 8 <= py <= y1 + 8):
+                continue
+            for nx, ny in back:
+                edge = y0 if ny < 0 else (x0 if nx < 0 else x1)
+                value = py if ny else px
+                if abs(value - edge) <= 8:
+                    return True
+        return False
+
     link_level = {}
     for g in link_groups:
         pts = endpoints(g)
-        link_level[id(g)] = max((level_at(x, y) for x, y in pts), default=0)
+        level = max((level_at(x, y, 2) for x, y in pts), default=0)
+        if any(on_hidden_side(x, y) for x, y in pts[-2:]):
+            level += 1
+        link_level[id(g)] = level
 
     items = []  # (level, kind, order, element); kind 0 = band on a block top, 1 = filled flat shape, 2 = line, text, icon, 3 = block
 

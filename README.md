@@ -48,6 +48,8 @@ What the script does:
 - A block inside another block stands on top of it. Text, icons and lines inside a block rise with it.
 - A band across the top of a block, such as a class header, stays on the top face. Small circles, such as the circled letters of a class, stay flat.
 - A link keeps one height with its arrowhead and label: the height of the higher of its two ends. Blocks paint over the links that point at them, so an arrow ends at the base of its target instead of crossing it.
+- A link that reaches a block from its back, where the raised top face would hide it, rises onto the roof instead, so that short links between stacked boxes stay visible.
+- Every gallery SVG embeds a Latin subset of Open Sans (`tools/embed_fonts.py`), so it renders the same in a browser that lacks the font.
 - Lines and arrows stay on the surface they belong to.
 
 Limits of the first version:
